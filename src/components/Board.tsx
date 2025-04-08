@@ -44,8 +44,11 @@ const Board: React.FC = () => {
 
   if (!currentBoard) {
     return (
-      <div className="flex justify-center items-center h-64 text-gray-500">
-        Select or create a board to get started
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">No Board Selected</h2>
+          <p className="text-gray-500">Select or create a board to get started</p>
+        </div>
       </div>
     );
   }
@@ -54,31 +57,40 @@ const Board: React.FC = () => {
   const sortedLists = [...currentBoard.lists].sort((a, b) => a.position - b.position);
   
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <Droppable droppableId="board" type="list" direction="horizontal">
-        {(provided) => (
-          <div 
-            className="board-container p-6 flex items-start space-x-4 overflow-x-auto scrollbar-hide"
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-          >
-            {sortedLists.map((list, index) => (
-              <List
-                key={list.id}
-                id={list.id}
-                title={list.title}
-                cards={list.cards}
-                onAddCard={handleAddCard}
-                index={index}
-              />
-            ))}
-            {provided.placeholder}
-            
-            <CreateList onAddList={handleAddList} />
-          </div>
+    <div className="container mx-auto px-4 py-4">
+      <div className="mb-4">
+        <h1 className="text-xl font-bold">{currentBoard.name}</h1>
+        {currentBoard.description && (
+          <p className="text-sm text-gray-600">{currentBoard.description}</p>
         )}
-      </Droppable>
-    </DragDropContext>
+      </div>
+      
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="board" type="list" direction="horizontal">
+          {(provided) => (
+            <div 
+              className="board-container flex items-start space-x-4 overflow-x-auto pb-4 pt-2"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {sortedLists.map((list, index) => (
+                <List
+                  key={list.id}
+                  id={list.id}
+                  title={list.title}
+                  cards={list.cards}
+                  onAddCard={handleAddCard}
+                  index={index}
+                />
+              ))}
+              {provided.placeholder}
+              
+              <CreateList onAddList={handleAddList} />
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    </div>
   );
 };
 

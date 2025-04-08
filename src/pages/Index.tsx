@@ -11,13 +11,21 @@ const Index = () => {
     <WorkspaceProvider>
       <div className="min-h-screen bg-trello-gray flex flex-col">
         <Navbar />
-        <div className="p-3 bg-trello-blue flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center space-x-4">
-            <WorkspaceSelector />
-            <BoardSelector />
+        
+        <div className="container mx-auto px-4 py-6">
+          <WorkspaceSelector />
+          <BoardSelector />
+        </div>
+        
+        <div className="p-3 bg-trello-blue mt-6">
+          <div className="container mx-auto px-4">
+            {/* Current board name would go here */}
           </div>
         </div>
-        <Board />
+        
+        <div className="flex-grow">
+          <Board />
+        </div>
       </div>
     </WorkspaceProvider>
   );
