@@ -2,16 +2,24 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Board from '@/components/Board';
+import { WorkspaceProvider } from '@/context/WorkspaceContext';
+import WorkspaceSelector from '@/components/WorkspaceSelector';
+import BoardSelector from '@/components/BoardSelector';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-trello-gray flex flex-col">
-      <Navbar />
-      <div className="p-2 bg-trello-blue flex items-center">
-        <h2 className="text-white font-semibold px-4">Main Project Board</h2>
+    <WorkspaceProvider>
+      <div className="min-h-screen bg-trello-gray flex flex-col">
+        <Navbar />
+        <div className="p-3 bg-trello-blue flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center space-x-4">
+            <WorkspaceSelector />
+            <BoardSelector />
+          </div>
+        </div>
+        <Board />
       </div>
-      <Board />
-    </div>
+    </WorkspaceProvider>
   );
 };
 

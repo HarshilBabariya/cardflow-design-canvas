@@ -1,113 +1,88 @@
 
-import React, { useState } from 'react';
-import List, { CardType } from './List';
+import React from 'react';
+import List from './List';
 import CreateList from './CreateList';
-import { v4 as uuidv4 } from 'uuid';
-
-interface ListType {
-  id: string;
-  title: string;
-  cards: CardType[];
-}
+import { useWorkspace } from '@/context/WorkspaceContext';
+import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 
 const Board: React.FC = () => {
-  const [lists, setLists] = useState<ListType[]>([
-    {
-      id: uuidv4(),
-      title: 'To Do',
-      cards: [
-        {
-          id: uuidv4(),
-          title: 'Learn React basics',
-          labels: [{ color: 'bg-blue-500', text: 'Learning' }],
-        },
-        {
-          id: uuidv4(),
-          title: 'Design a new logo',
-          description: 'Create a modern and sleek logo for the brand',
-          labels: [{ color: 'bg-yellow-500', text: 'Design' }],
-        },
-      ],
-    },
-    {
-      id: uuidv4(),
-      title: 'In Progress',
-      cards: [
-        {
-          id: uuidv4(),
-          title: 'Build UI components',
-          description: 'Create reusable UI components for the application',
-          labels: [
-            { color: 'bg-green-500', text: 'Development' },
-            { color: 'bg-purple-500', text: 'Frontend' },
-          ],
-        },
-      ],
-    },
-    {
-      id: uuidv4(),
-      title: 'Done',
-      cards: [
-        {
-          id: uuidv4(),
-          title: 'Set up project repository',
-          labels: [{ color: 'bg-red-500', text: 'DevOps' }],
-        },
-        {
-          id: uuidv4(),
-          title: 'Research competitors',
-          description: 'Analyze what similar products are doing in the market',
-          labels: [{ color: 'bg-orange-500', text: 'Research' }],
-        },
-        {
-          id: uuidv4(),
-          title: 'Gather requirements',
-          labels: [{ color: 'bg-indigo-500', text: 'Planning' }],
-        },
-      ],
-    },
-  ]);
+  const { currentBoard, addList, addCard, updateCardPosition, updateListPosition } = useWorkspace();
 
   const handleAddList = (title: string) => {
-    const newList: ListType = {
-      id: uuidv4(),
-      title,
-      cards: [],
-    };
-    setLists([...lists, newList]);
+    if (currentBoard) {
+      addList(currentBoard.id, title);
+    }
   };
 
   const handleAddCard = (listId: string, cardTitle: string) => {
-    const newCard: CardType = {
-      id: uuidv4(),
-      title: cardTitle,
-    };
-
-    setLists(lists.map(list => {
-      if (list.id === listId) {
-        return {
-          ...list,
-          cards: [...list.cards, newCard],
-        };
-      }
-      return list;
-    }));
+    addCard(listId, cardTitle);
   };
 
+  const handleDragEnd = (result: DropResult) => {
+    const { source, destination, type, draggableId } = result;
+    
+    // Dropped outside the list
+    if (!destination) return;
+    
+    // No movement
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+    
+    // Moving a list
+    if (type === 'list') {
+      updateListPosition(draggableId, destination.index);
+      return;
+    }
+    
+    // Moving a card
+    updateCardPosition(
+      draggableId,
+      source.droppableId,
+      destination.droppableId,
+      destination.index
+    );
+  };
+
+  if (!currentBoard) {
+    return (
+      <div className="flex justify-center items-center h-64 text-gray-500">
+        Select or create a board to get started
+      </div>
+    );
+  }
+
   return (
-    <div className="board-container p-6 flex items-start space-x-4 scrollbar-hide">
-      {lists.map(list => (
-        <List
-          key={list.id}
-          id={list.id}
-          title={list.title}
-          cards={list.cards}
-          onAddCard={handleAddCard}
-        />
-      ))}
-      
-      <CreateList onAddList={handleAddList} />
-    </div>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <Droppable droppableId="board" type="list" direction="horizontal">
+        {(provided) => (
+          <div 
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className="board-container p-6 flex items-start space-x-4 overflow-x-auto scrollbar-hide"
+          >
+            {currentBoard.lists
+              .sort((a, b) => a.position - b.position)
+              .map((list, index) => (
+                <List
+                  key={list.id}
+                  id={list.id}
+                  title={list.title}
+                  cards={list.cards}
+                  onAddCard={handleAddCard}
+                  index={index}
+                />
+              ))}
+            {provided.placeholder}
+            
+            <CreateList onAddList={handleAddList} />
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 };
 
