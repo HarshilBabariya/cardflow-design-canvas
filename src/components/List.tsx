@@ -1,13 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import Card from './Card';
 import CreateCard from './CreateCard';
 import { cn } from '@/lib/utils';
 import { Card as CardType } from '@/types';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { Draggable, Droppable } from 'react-beautiful-dnd';
 
 interface ListProps {
   id: string;
@@ -26,27 +24,6 @@ const List: React.FC<ListProps> = ({
   index,
   className,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({
-    id,
-    data: {
-      type: 'list',
-      index
-    }
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1
-  };
-
   const handleAddCard = (cardTitle: string) => {
     onAddCard(id, cardTitle);
   };
@@ -55,55 +32,61 @@ const List: React.FC<ListProps> = ({
   const sortedCards = [...cards].sort((a, b) => a.position - b.position);
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "bg-trello-gray rounded-md w-72 h-fit max-h-full flex-shrink-0 flex flex-col shadow-sm",
-        isDragging && "shadow-lg",
-        className
-      )}
-    >
-      <div 
-        className="p-2 flex justify-between items-center cursor-grab"
-        {...attributes}
-        {...listeners}
-      >
-        <h2 className="font-medium px-2 py-1 text-trello-dark-gray">{title}</h2>
-        <button className="p-1 rounded-md hover:bg-gray-200">
-          <MoreHorizontal className="h-5 w-5 text-gray-500" />
-        </button>
-      </div>
-      
-      <SortableContext 
-        items={sortedCards.map(card => card.id)}
-        strategy={verticalListSortingStrategy}
-      >
+    <Draggable draggableId={id} index={index}>
+      {(provided, snapshot) => (
         <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
           className={cn(
-            "px-2 pb-2 flex-1 overflow-y-auto scrollbar-hide"
+            "bg-trello-gray rounded-md w-72 h-fit max-h-full flex-shrink-0 flex flex-col shadow-sm",
+            snapshot.isDragging && "shadow-lg",
+            className
           )}
         >
-          {sortedCards.map((card, cardIndex) => (
-            <Card
-              key={card.id}
-              id={card.id}
-              title={card.name}
-              description={card.description}
-              labels={card.labels}
-              attachments={card.attachments?.length}
-              members={card.members}
-              startDate={card.start_date}
-              priority={card.priority}
-              listId={id}
-              index={cardIndex}
-            />
-          ))}
+          <div 
+            className="p-2 flex justify-between items-center cursor-grab"
+            {...provided.dragHandleProps}
+          >
+            <h2 className="font-medium px-2 py-1 text-trello-dark-gray">{title}</h2>
+            <button className="p-1 rounded-md hover:bg-gray-200">
+              <MoreHorizontal className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
           
-          <CreateCard onAddCard={handleAddCard} />
+          <Droppable droppableId={id} type="card">
+            {(provided, snapshot) => (
+              <div
+                className={cn(
+                  "px-2 pb-2 flex-1 overflow-y-auto scrollbar-hide",
+                  snapshot.isDraggingOver && "bg-gray-100"
+                )}
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+              >
+                {sortedCards.map((card, cardIndex) => (
+                  <Card
+                    key={card.id}
+                    id={card.id}
+                    title={card.name}
+                    description={card.description}
+                    labels={card.labels}
+                    attachments={card.attachments?.length}
+                    members={card.members}
+                    startDate={card.start_date}
+                    priority={card.priority}
+                    listId={id}
+                    index={cardIndex}
+                  />
+                ))}
+                {provided.placeholder}
+                
+                <CreateCard onAddCard={handleAddCard} />
+              </div>
+            )}
+          </Droppable>
         </div>
-      </SortableContext>
-    </div>
+      )}
+    </Draggable>
   );
 };
 

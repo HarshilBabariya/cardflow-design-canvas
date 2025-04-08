@@ -3,8 +3,7 @@ import React from 'react';
 import { Calendar, Paperclip, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Priority } from '@/types';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { Draggable } from 'react-beautiful-dnd';
 
 interface CardProps {
   id: string;
@@ -46,91 +45,72 @@ const Card: React.FC<CardProps> = ({
   index,
   className,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({
-    id,
-    data: {
-      type: 'card',
-      listId,
-      index
-    }
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1
-  };
-
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={cn(
-        "bg-white rounded-md shadow-sm border border-trello-border p-3 mb-2 cursor-grab hover:shadow-md transition-all animate-fade-in",
-        isDragging && "shadow-lg",
-        className
-      )}
-    >
-      {labels.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2">
-          {labels.map((label, i) => (
-            <div
-              key={i}
-              className={`h-2 w-10 rounded-sm ${label.color}`}
-              title={label.text}
-            />
-          ))}
-        </div>
-      )}
-
-      <h3 className="text-sm font-medium text-trello-dark-gray mb-1">{title}</h3>
-
-      {description && (
-        <p className="text-xs text-gray-500 mb-2">{description}</p>
-      )}
-
-      <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
-        <div className="flex items-center space-x-2">
-          {priority && (
-            <span className={`px-1.5 py-0.5 rounded-full text-xs ${getPriorityColor(priority)}`}>
-              {priority}
-            </span>
+    <Draggable draggableId={id} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={cn(
+            "bg-white rounded-md shadow-sm border border-trello-border p-3 mb-2 cursor-grab hover:shadow-md transition-all animate-fade-in",
+            snapshot.isDragging && "shadow-lg",
+            className
           )}
-          
-          {startDate && (
-            <div className="flex items-center">
-              <Calendar className="h-3 w-3 mr-1" />
-              <span>{new Date(startDate).toLocaleDateString()}</span>
+        >
+          {labels.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {labels.map((label, i) => (
+                <div
+                  key={i}
+                  className={`h-2 w-10 rounded-sm ${label.color}`}
+                  title={label.text}
+                />
+              ))}
             </div>
           )}
-        </div>
 
-        <div className="flex items-center space-x-2">
-          {attachments && attachments > 0 && (
-            <div className="flex items-center">
-              <Paperclip className="h-3 w-3 mr-1" />
-              <span>{attachments}</span>
-            </div>
+          <h3 className="text-sm font-medium text-trello-dark-gray mb-1">{title}</h3>
+
+          {description && (
+            <p className="text-xs text-gray-500 mb-2">{description}</p>
           )}
-          
-          {members && members.length > 0 && (
-            <div className="flex items-center">
-              <Users className="h-3 w-3 mr-1" />
-              <span>{members.length}</span>
+
+          <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
+            <div className="flex items-center space-x-2">
+              {priority && (
+                <span className={`px-1.5 py-0.5 rounded-full text-xs ${getPriorityColor(priority)}`}>
+                  {priority}
+                </span>
+              )}
+              
+              {startDate && (
+                <div className="flex items-center">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  <span>{new Date(startDate).toLocaleDateString()}</span>
+                </div>
+              )}
             </div>
-          )}
+
+            <div className="flex items-center space-x-2">
+              {attachments && attachments > 0 && (
+                <div className="flex items-center">
+                  <Paperclip className="h-3 w-3 mr-1" />
+                  <span>{attachments}</span>
+                </div>
+              )}
+              
+              {members && members.length > 0 && (
+                <div className="flex items-center">
+                  <Users className="h-3 w-3 mr-1" />
+                  <span>{members.length}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </Draggable>
   );
 };
 
